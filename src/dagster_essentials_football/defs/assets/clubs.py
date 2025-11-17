@@ -8,6 +8,7 @@ from dagster_essentials_football.defs.partitions import monthly_partition
 
 @dg.asset(
         partitions_def=monthly_partition,
+        group_name="persisted",
 )
 def club_valuation_evolution_db(
     context: dg.AssetExecutionContext,

@@ -1,3 +1,4 @@
+import base64
 import dagster as dg
 from dagster_duckdb import DuckDBResource
 import matplotlib
@@ -21,7 +22,8 @@ import seaborn as sns
         partitions_def=monthly_partition,
         deps=["football_competitions_db",
               "football_clubs_db",
-              "player_valuations_db"]
+              "player_valuations_db"],
+        group_name="persisted"
 )
 def league_valuation_evolution_db(
     context: dg.AssetExecutionContext,
@@ -106,7 +108,8 @@ def league_valuation_evolution_db(
 
 @dg.asset(
         deps=["league_valuation_evolution_db",
-              "league_logos"]
+              "league_logos"],
+        group_name="reports"
 )
 def first_league_valuation(
     database: DuckDBResource,
@@ -183,7 +186,7 @@ def first_league_valuation(
     yearly_data_total['competition_name'] + " (" + yearly_data_total['country_name'] + ")"
     )
 
-    plot_leagues(
+    output_path_all = plot_leagues(
         yearly_data_total,
         groupby_columns=['league_label', 'domestic_competition_id'],
         statistic='total_valuation',
@@ -209,7 +212,7 @@ def first_league_valuation(
     yearly_data_max['competition_name'] + " (" + yearly_data_max['country_name'] + ")"
     )
 
-    plot_leagues(
+    output_path_max = plot_leagues(
         yearly_data_max,
         groupby_columns=['league_label', 'domestic_competition_id'],
         statistic='max_valuation',
@@ -220,4 +223,20 @@ def first_league_valuation(
         step=1_000_000
     )
 
+    with open(output_path_all, 'rb') as file:
+        image_data = file.read()
 
+    base64_data = base64.b64encode(image_data).decode('utf-8')
+    md_content = f"![Image](data:image/jpeg;base64,{base64_data})"
+
+    with open(output_path_max, 'rb') as file:
+        image_data = file.read()
+
+    base64_data = base64.b64encode(image_data).decode('utf-8')
+    md_content += f"\n![Image](data:image/jpeg;base64,{base64_data})"
+
+    return dg.MaterializeResult(
+    metadata={
+        "preview": dg.MetadataValue.md(md_content)
+    }
+)

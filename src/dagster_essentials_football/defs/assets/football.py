@@ -10,7 +10,7 @@ from dagster_duckdb import DuckDBResource
 from bs4 import BeautifulSoup
 import os
 
-@dg.asset()
+@dg.asset(group_name="raw_files")
 def football_player_valuations_file():
     """"""
     df: pd.DataFrame = kagglehub.load_dataset(
@@ -27,7 +27,8 @@ def football_player_valuations_file():
 
 @dg.asset(
     partitions_def=monthly_partition,
-    deps=["football_player_valuations_file"]
+    deps=["football_player_valuations_file"],
+    group_name="partitioned_files"
 )
 def monthly_player_valuations(context: dg.AssetExecutionContext) -> None:
     """
@@ -51,7 +52,8 @@ def monthly_player_valuations(context: dg.AssetExecutionContext) -> None:
 
 @dg.asset(
     partitions_def=monthly_partition,
-    deps=["monthly_player_valuations"]
+    deps=["monthly_player_valuations"],
+    group_name="persisted"
 )
 def player_valuations_db(
     context: dg.AssetExecutionContext, 
@@ -91,7 +93,7 @@ def player_valuations_db(
         conn.execute(sql_query)
 
 
-@dg.asset()
+@dg.asset(group_name="raw_files")
 def football_competitions_file():
     """"""
     df: pd.DataFrame = kagglehub.load_dataset(
@@ -110,7 +112,8 @@ def football_competitions_file():
         df.to_parquet(f, index=False)
 
 
-@dg.asset(deps=["football_competitions_file"])
+@dg.asset(deps=["football_competitions_file"],
+          group_name="persisted")
 def football_competitions_db(database: DuckDBResource) -> None:
     """
     Loads the competitions parquet file into a DuckDB table.
@@ -125,7 +128,7 @@ def football_competitions_db(database: DuckDBResource) -> None:
         conn.execute(sql_query)
 
 
-@dg.asset()
+@dg.asset(group_name="raw_files")
 def football_players_file():
     """"""
     df: pd.DataFrame = kagglehub.load_dataset(
@@ -139,7 +142,8 @@ def football_players_file():
 
 
 @dg.asset(
-        deps=["football_players_file"]
+        deps=["football_players_file"],
+    group_name="persisted"
 )
 def football_players_db(
     database: DuckDBResource,
@@ -157,7 +161,7 @@ def football_players_db(
         conn.execute(sql_query)
 
 
-@dg.asset()
+@dg.asset(group_name="raw_files")
 def football_player_appearances_file():
     """
     Downloads the player appearances dataset from Kaggle and saves it as a Parquet file.
@@ -181,7 +185,8 @@ def football_player_appearances_file():
 
 @dg.asset(
     partitions_def=monthly_partition,
-    deps=["football_player_appearances_file"]
+    deps=["football_player_appearances_file"],
+    group_name="partitioned_files"
 )
 def monthly_player_appearances(context: dg.AssetExecutionContext) -> None:
     """
@@ -205,7 +210,8 @@ def monthly_player_appearances(context: dg.AssetExecutionContext) -> None:
 
 @dg.asset(
     partitions_def=monthly_partition,
-    deps=["monthly_player_appearances"]
+    deps=["monthly_player_appearances"],
+    group_name="persisted"
 )
 def player_appearances_db(
     context: dg.AssetExecutionContext, 
@@ -257,7 +263,7 @@ def player_appearances_db(
         conn.execute(sql_query)
 
 
-@dg.asset()
+@dg.asset(group_name="raw_files")
 def football_clubs_file():
     """"""
     df: pd.DataFrame = kagglehub.load_dataset(
@@ -280,7 +286,8 @@ def football_clubs_file():
         df.to_parquet(f, index=False)
 
 
-@dg.asset(deps=["football_clubs_file"])
+@dg.asset(deps=["football_clubs_file"],
+    group_name="persisted")
 def football_clubs_db(database: DuckDBResource) -> None:
     """
     Loads the clubs parquet file into a DuckDB table.
@@ -296,7 +303,8 @@ def football_clubs_db(database: DuckDBResource) -> None:
 
 
 @dg.asset(
-        deps=["football_competitions_db"]
+        deps=["football_competitions_db"],
+        group_name="static_files"
 )
 def league_logos(
     database: DuckDBResource,
@@ -359,7 +367,7 @@ def league_logos(
             img_file.write(image_response.content)
 
 
-@dg.asset()
+@dg.asset(group_name="raw_files")
 def football_games_file():
     """dd"""
     df: pd.DataFrame = kagglehub.load_dataset(
@@ -373,7 +381,8 @@ def football_games_file():
 
 
 @dg.asset(
-    deps=["football_games_file"]
+    deps=["football_games_file"],
+    group_name="persisted"
 )
 def football_games_db(
     database: DuckDBResource

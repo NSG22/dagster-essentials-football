@@ -96,3 +96,5 @@ def plot_leagues(yearly_data_total: pd.DataFrame,
 
     output_path = os.path.join("data/outputs/", output_path)
     plt.savefig(output_path, bbox_inches='tight')
+
+    return output_path
