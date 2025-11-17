@@ -86,7 +86,7 @@ The final outputs of this pipeline are two graphs that analyze the market value 
 
 ### Total League Valuation
 
-![Aggregated Market Value](data/outputs/first_league_valuation_evolution.png.png)
+![Aggregated Market Value](data/outputs/first_league_valuation_evolution.png)
 This plot shows the aggregated market value of all players within each league.
 
 **Analysis:** The **Premier League (England)** shows clear and growing financial dominance, separating itself from all other leagues, especially after 2018. A competitive second tier consists of **LaLiga (Spain)**, **Serie A (Italy)**, and the **Bundesliga (Germany)**, which have much closer total valuations.
